@@ -8,20 +8,17 @@
 from random import randrange
 from PyQt6 import QtCore, QtGui, QtWidgets
 from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
+from qtpy import QtWidgets, QtCore
+from QNotifications import QNotificationArea
 import Api
 import cv2
 import numpy as np
+import array as arr
 
 
                 
 class Ui_MainWindow(QtWidgets.QWidget):
 
-    def scanImage(self):
-        self.pbScan.setText("Please Wait..")
-        self.pbScan.isEnabled = False
-        self.take_picture()
-        self.pbScan.setText("Scan")
-        self.pbScan.isEnabled = True
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -46,6 +43,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Attendance Scan"))
@@ -56,6 +54,10 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
         # load webcam
         self.initializeWebcam()
+
+        # load notify
+        self.initializeNotify()
+
 
     def initializeWebcam(self):
 
@@ -74,6 +76,20 @@ class Ui_MainWindow(QtWidgets.QWidget):
         # start the thread
         self.thread.start()
 
+
+    def initializeNotify(self):
+        # Create a widget to render the notifications on.
+        self.targetWidget = QtWidgets.QWidget(self.centralwidget)
+        self.targetWidget.setGeometry(100,100,800,600)
+        self.targetWidget.setObjectName("targetWidget")
+
+        # Create a new notification area, and pass it the target widget.
+        self.qna = QNotificationArea(self.targetWidget)
+        
+        # Show the target widget.
+        self.targetWidget.show()
+
+
     @pyqtSlot(np.ndarray)
     def update_image(self, cv_img):
         """Updates the image_label with a new opencv image"""
@@ -88,11 +104,25 @@ class Ui_MainWindow(QtWidgets.QWidget):
         convert_to_Qt_format = QtGui.QImage(rgb_image.data, w, h, bytes_per_line, QtGui.QImage.Format.Format_RGB888)
         p = convert_to_Qt_format.scaled(401, 261, QtCore.Qt.AspectRatioMode.KeepAspectRatio)
         return QtGui.QPixmap.fromImage(p)
-    
+
     def take_picture(self):
         ret, img = cap.read()
         cv2.imwrite("opencvTest1.jpeg", img)
 
+
+    def scanImage(self):
+        self.pbScan.setText("Please Wait..")
+        self.pbScan.isEnabled = False
+        self.take_picture()
+        self.pbScan.setText("Scan")
+        self.pbScan.isEnabled = True
+        self.sendNotify('saved picture!',0)
+
+    
+    def sendNotify(self, msg, style):
+        index = ['primary','info','danger']
+        self.qna.display(msg,index[style],2000)
+    
 
 
 # Thread Class
