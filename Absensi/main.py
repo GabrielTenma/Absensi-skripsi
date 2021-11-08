@@ -7,10 +7,11 @@
 
 # drawer ui lib
 from random import randrange
-from PyQt6 import QtCore, QtGui, QtWidgets
-from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
 from qtpy import QtWidgets, QtCore
 from QNotifications import QNotificationArea
+import logging as log
 
 # data lib
 import cv2
@@ -26,9 +27,9 @@ import board
 import adafruit_amg88xx
 
 # common
-import Common as util
+import CommonUtil as util
 import Api as delivery
-
+import time
 
                 
 class Ui_MainWindow(QtWidgets.QWidget):
@@ -110,11 +111,12 @@ class Ui_MainWindow(QtWidgets.QWidget):
     # func :: get value from thermal
     def thermalDetectValue(self):
         # pixel stack data thermal (8x8)
-        for x in range(len(self.pixels)):
-            for y in range(len(self.pixels[0])):
+        pixels = self.sensorTc.pixels                                # alias pixel as sensorTc pixels 
+        for x in range(len(pixels)):
+            for y in range(len(pixels[0])):
                 # save higher value thermal temp
-                if(self.pixels[x][y] > self.thermalMaxTemp):
-                    self.thermalMaxTemp = self.pixels[x][y]
+                if(pixels[x][y] > self.thermalMaxTemp):
+                    self.thermalMaxTemp = pixels[x][y]
 
     @pyqtSlot(np.ndarray)
     def update_image(self, cv_img):
@@ -150,27 +152,31 @@ class Ui_MainWindow(QtWidgets.QWidget):
     def sendNotify(self, msg, style):
         index = ['primary','info','danger']
         self.qna.display(msg,index[style],2000)
+
+    # func :: send request & recv user name
+    def deliveryImage(self, imagePath):
+        delivery.matchImagePerson(self.thermalMaxTemp, imagePath)
+
     
 
 
 # Thread Class (videoThread)
 class VideoThread(QThread):
     change_pixmap_signal = pyqtSignal(np.ndarray)
-
     def run(self):
         # cv face detect with default haarcascade
-        faceDetect = cv2.CascadeClassifier(self.FILE_CASCADE);
-        
+        faceDetect = cv2.CascadeClassifier('haarcascade_frontalface_default.xml');
+
         # capture from web cam
         while True:
             # separate ret and frame
             ret, cv_img = cap.read()
             # load thermaldetect temp
-            self.thermalDetectValue()
 
             # set image(cv) to grayscale bw
             gray = cv2.cvtColor(cv_img,cv2.COLOR_BGR2GRAY)
-            faces = faceDetect.detectMultiScale(gray,1.3,5);
+            faces = faceDetect.detectMultiScale(gray,1.3,5)
+            Ui_MainWindow.thermalDetectValue()
             # create rectangle in face
             for (x,y,w,h) in faces:
                 cv2.rectangle(cv_img,(x,y), (x+w,y+h),(0,255,0),2)
@@ -179,6 +185,8 @@ class VideoThread(QThread):
             if ret:
                 self.change_pixmap_signal.emit(cv_img)
 
+            log.info("Thermal Max Temperature: "+ thermalMaxTemp)
+
 
 # Main app first load
 if __name__ == "__main__":
@@ -186,20 +194,24 @@ if __name__ == "__main__":
     # Configuration
     CAMERA_INDEX = 0                                        # camera webcam index (default is 0)
     FILE_CASCADE = 'haarcascade_frontalface_default.xml'    # cascade file location
-    
+
     # Variables
     thermalMaxTemp = 0.0                                    # thermal maximum temp variable (thermalMaxTemp <- thermalDetectValue())
     isDetectFace = False                                    # boolean val is steady detect face (isDetectValue <- VideoThread)
 
     # Initializer
     util.checkAdafruitBoard()                               # load util check adafruit board
+
+    i2c = busio.I2C(board.SCL, board.SDA)                   # init board raspberry
+    sensorTc = adafruit_amg88xx.AMG88XX(i2c)                # init sensor AMG8833g
+    time.sleep(1)
+    log.basicConfig(filename='verbose.log',level=log.INFO)
+
     app = QtWidgets.QApplication(sys.argv)                  # alias QtWidget
     MainWindow = QtWidgets.QMainWindow()                    # set mainwindow as QtWidget
     ui = Ui_MainWindow()                                    # alias ui_Mainwindow
     cap = cv2.VideoCapture(CAMERA_INDEX)                    # set cap as cv2 videocapture
+
     ui.setupUi(MainWindow)                                  # load ui
-    i2c = busio.I2C(board.SCL, board.SDA)                   # init board raspberry
-    sensorTc = adafruit_amg88xx.AMG88XX(i2c)                # init sensor AMG8833g
-    pixels = sensorTc.pixels                                # alias pixel as sensorTc pixels 
     MainWindow.show()                                       # call mainwindow to show
     sys.exit(app.exec())                                    # exit when mainwindow closed
