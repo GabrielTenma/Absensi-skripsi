@@ -1,5 +1,5 @@
 from PIL import Image, ImageDraw, ImageFilter
-import CommonUtil
+import util.CommonUtil as util
 import requests
 import sys
 import traceback
@@ -36,5 +36,5 @@ def matchImagePerson(temperature, image):
     return result
 
 # example api
-print(matchImagePerson('20','sample-image\\sample1.jpeg'))
+print(matchImagePerson('20','assets\\sample1.jpeg'))
 

@@ -2,10 +2,7 @@ todo merge:
 - init i2c sensor (ok)
 - suhu temperature realtime (ok)
 - penambahan deteksi board ada apa kgk (ok)
+- hit api to endpoint (send/recv) (ok)
 
 pending todo:
-- testing setelah merge (gagal test ketika di windows (?))
-    Exception: NotImplementedError: Adafruit-PlatformDetect version 3.17.1 was unable to identify the board and/or microcontroller running the Windows platform. Please be sure you have the latest packages running: 'pip3 install --upgrade adafruit-blinka adafruit-platformdetect'
 - auto save image setelah dapet face nya
-- endcode image to encode64 (func)
-- hit api to endpoint (send/recv)
