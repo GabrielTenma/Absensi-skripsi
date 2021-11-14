@@ -26,5 +26,5 @@ def matchImagePerson(temperature, image):
     return result
 
 # example api
-print(matchImagePerson('20','..\\assets\\sample1.jpeg'))
+print(matchImagePerson('20',util.checkPath('..\\assets\\sample1.jpeg')))
 

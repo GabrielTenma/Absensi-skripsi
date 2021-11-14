@@ -162,7 +162,7 @@ class VideoThread(QThread):
         log.info("[CHECK] Cascade Path: "+ str(util.checkFileIsExist(appConfig.FILE_CASCADE)))
         
         # cv face detect with default haarcascade
-        faceDetect = cv2.CascadeClassifier(appConfig.FILE_CASCADE);
+        faceDetect = cv2.CascadeClassifier(util.checkPath(appConfig.FILE_CASCADE));
 
         # capture from web cam
         while True:

@@ -1,6 +1,8 @@
+from os import system
 from adafruit_platformdetect import Detector
 import logging
 import requests
+import sys
 import os.path
 from enum import Enum
 import App.config.variable.ApplicationConstant as appConfig
@@ -50,3 +52,13 @@ def collectLog(message,state):
         Logstate.ERROR : logging.error(str(message)),
         Logstate.DEBUG : logging.debug(str(message))
     }[state]
+
+# fix filepath
+def checkPath(filepath):
+    result = filepath
+    if(sys.platform.startswith('linux')):
+        result = filepath.replace("\\", "/")
+    elif (sys.platform.startswith('win32')):
+        result = filepath.replace("/","\\")
+    logging.info("platform detected: " + str(sys.platform))
+    return result
