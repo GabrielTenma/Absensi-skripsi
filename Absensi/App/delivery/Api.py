@@ -1,33 +1,23 @@
-from PIL import Image, ImageDraw, ImageFilter
-import util.CommonUtil as util
-import requests
 import sys
+from PIL import Image, ImageDraw, ImageFilter
+import App.util.CommonUtil as util
+import App.config.variable.ApplicationConstant as appConfig
+import requests
 import traceback
 
 
-# Api Endpoint
-ENDPOINT_URL = "https://attendance-serviceku.herokuapp.com"
-
-# Bearer Token
-BEARER_TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InN5YWhydWwiLCJpYXQiOjE2MzU1NzA4OTgsImV4cCI6MTYzNjQzNDg5OH0.OJsH1eAzamr1ap3oenwpmIktKIKHFwS_5ajX6XHh9iI"
-
-# Custom Header
-HEAD_BEARER = {'Authorization': 'Bearer ' + BEARER_TOKEN}
-
 # Raw post
 def rawPost(address, param, data):
-    r = requests.post(url= ENDPOINT_URL + address ,data= data)
-    # response result
+    r = requests.post(url= appConfig.ENDPOINT_URL + address ,data= data)
     return r.json
 
 # send image & receive person name :: POST
 def matchImagePerson(temperature, image):
-    
     result = ''
     try:
         data = {'suhu':temperature}
         files=[('file',('image.png',open(image,'rb'),'image/png'))]
-        r = requests.post(url= ENDPOINT_URL + "/absen/check", headers= HEAD_BEARER, data=data, files=files)
+        r = requests.post(url= appConfig.ENDPOINT_URL + appConfig.URL_FACE_RECOG, headers= appConfig.HEAD_BEARER, data=data, files=files)
         result = r.json()['content']['nama']
 
     except:
@@ -36,5 +26,5 @@ def matchImagePerson(temperature, image):
     return result
 
 # example api
-print(matchImagePerson('20','assets\\sample1.jpeg'))
+print(matchImagePerson('20','..\\assets\\sample1.jpeg'))
 

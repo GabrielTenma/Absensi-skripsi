@@ -29,10 +29,11 @@ import array as arr
 import sys
 
 # common
-import util.CommonUtil as util
-import config.variable.ApplicationConstant as appConfig
-import config.variable.GlobalVariable as globalVariable
-import delivery.Api as delivery
+import App.util.CommonUtil as util
+import App.config.variable.ApplicationConstant as appConfig
+import App.config.variable.GlobalVariable as globalVariable
+import App.delivery.Api as delivery
+from App.util.CommonUtil import Logstate
 
                 
 class Ui_MainWindow(QtWidgets.QWidget):
@@ -157,6 +158,9 @@ class Ui_MainWindow(QtWidgets.QWidget):
 class VideoThread(QThread):
     change_pixmap_signal = pyqtSignal(np.ndarray)
     def run(self):
+        # check file cascade
+        log.info("[CHECK] Cascade Path: "+ str(util.checkFileIsExist(appConfig.FILE_CASCADE)))
+        
         # cv face detect with default haarcascade
         faceDetect = cv2.CascadeClassifier(appConfig.FILE_CASCADE);
 
@@ -173,7 +177,7 @@ class VideoThread(QThread):
             self.thermalDetectValue()
 
             # set variable if detect face
-            globalVariable.isDetectFace = True if faces == True else False
+            globalVariable.isDetectFace = True if (len(faces) >= 1) else False
 
             # create rectangle in face
             for (x,y,w,h) in faces:
@@ -182,7 +186,7 @@ class VideoThread(QThread):
             if ret:
                 self.change_pixmap_signal.emit(cv_img)
 
-            log.info("Thermal Max Temperature: "+ globalVariable.thermalMaxTemp)
+            util.collectLog("Thermal Max Temperature: "+ str(globalVariable.thermalMaxTemp),Logstate.INFO)
     
     # func :: get value from thermal
     def thermalDetectValue(self):
@@ -201,12 +205,11 @@ if __name__ == "__main__":
     # Initializer
     util.checkAdafruitBoard()                               # load util check adafruit board
 
-    log.basicConfig(filename=appConfig.LOG_FILENAME,level=log.INFO)
-
     app = QtWidgets.QApplication(sys.argv)                  # alias QtWidget
     MainWindow = QtWidgets.QMainWindow()                    # set mainwindow as QtWidget
     ui = Ui_MainWindow()                                    # alias ui_Mainwindow
     cap = cv2.VideoCapture(appConfig.CAMERA_INDEX)          # set cap as cv2 videocapture
+    cap.set(cv2.CAP_PROP_FPS,appConfig.CAMERA_FPS)          # set camera fps max limit
 
     ui.setupUi(MainWindow)                                  # load ui
     MainWindow.show()                                       # call mainwindow to show
