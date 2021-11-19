@@ -1,0 +1,7 @@
+{
+    "python.analysis.extraPaths": [
+        "./Absensi/App",
+        "./Absensi/App/delivery",
+        "./Absensi/App/util"
+    ]
+}

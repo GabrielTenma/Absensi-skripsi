@@ -1,0 +1,8 @@
+todo merge:
+- init i2c sensor (ok)
+- suhu temperature realtime (ok)
+- penambahan deteksi board ada apa kgk (ok)
+- hit api to endpoint (send/recv) (ok)
+
+pending todo:
+- auto save image setelah dapet face nya
