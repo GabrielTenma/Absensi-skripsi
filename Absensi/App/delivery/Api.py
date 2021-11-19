@@ -15,9 +15,10 @@ def rawPost(address, param, data):
 def matchImagePerson(temperature, image):
     result = ''
     try:
-        data = {'suhu':temperature}
-        files=[('file',('',open(image,'rb'),'image/png'))]
         print(image)
+        data = {'suhu':temperature}
+        files=[('file',('sample1.jpeg',open(image,'rb'),'image/jpeg'))]
+        
         r = requests.post(url= appConfig.ENDPOINT_URL + appConfig.URL_FACE_RECOG, headers= appConfig.HEAD_BEARER, data=data, files=files)
         result = r.json()['content']['nama']
     except:
