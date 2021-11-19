@@ -19,12 +19,10 @@ def matchImagePerson(temperature, image):
         files=[('file',('image.png',open(image,'rb'),'image/png'))]
         r = requests.post(url= appConfig.ENDPOINT_URL + appConfig.URL_FACE_RECOG, headers= appConfig.HEAD_BEARER, data=data, files=files)
         result = r.json()['content']['nama']
-
     except:
         print('[POST] matchImagePerson Is ', sys.exc_info(), ' occured')
         #print(traceback.format_exc())
     return result
 
 # example api
-print(matchImagePerson('20',util.checkPath('../assets/sample1.jpeg')))
-
+print(matchImagePerson('20',util.checkPath(appConfig.TAKE_PICTURE_FILENAME)))
