@@ -16,7 +16,8 @@ def matchImagePerson(temperature, image):
     result = ''
     try:
         data = {'suhu':temperature}
-        files=[('file',('image.png',open(image,'rb'),'image/png'))]
+        files=[('file',('',open(image,'rb'),'image/png'))]
+        print(image)
         r = requests.post(url= appConfig.ENDPOINT_URL + appConfig.URL_FACE_RECOG, headers= appConfig.HEAD_BEARER, data=data, files=files)
         result = r.json()['content']['nama']
     except:
