@@ -21,6 +21,7 @@ from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
 from qtpy import QtWidgets, QtCore
 from QNotifications import QNotificationArea
 import logging as log
+import time
 
 # data lib
 import cv2
@@ -192,6 +193,7 @@ class VideoThread(QThread):
     def thermalDetectValue(self):
         # pixel stack data thermal (8x8)
         pixels = globalVariable.sensorTc.pixels                              # alias pixel as sensorTc pixels 
+        time.sleep(1)
         for x in range(len(pixels)):
             for y in range(len(pixels[0])):
                 # save higher value thermal temp
