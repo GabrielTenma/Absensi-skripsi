@@ -17,12 +17,11 @@ def matchImagePerson(temperature, image):
     try:
         print(image)
         data = {'suhu':temperature}
-        files=[('file',('sample1.jpeg',open(image,'rb'),'image/jpeg'))]
-        
-        r = requests.post(url= appConfig.ENDPOINT_URL + appConfig.URL_FACE_RECOG, headers= appConfig.HEAD_BEARER, data=data, files=files)
+        files=[('file',('file.jpeg',open(image,'rb'),'image/jpeg'))]
+        r = requests.post(url= util.endpointCall(appConfig.URL_FACE_RECOG), headers= appConfig.HEAD_BEARER, data=data, files=files)
         result = r.json()['content']['nama']
     except:
-        print('[POST] matchImagePerson Is ', sys.exc_info(), ' occured')
+        util.collectLog("[POST] matchImagePerson: occured " + sys.exc_info(),util.Logstate.ERROR)
         #print(traceback.format_exc())
     return result
 

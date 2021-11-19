@@ -38,6 +38,10 @@ def checkHttpStatus(request):
     else:
         return False
 
+# endpoint path str
+def endpointCall(address):
+    return appConfig.ENDPOINT_URL + address
+
 # check file is exist
 def checkFileIsExist(filePath):
     if(os.path.isfile(filePath)):
