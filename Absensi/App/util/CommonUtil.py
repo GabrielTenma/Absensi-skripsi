@@ -59,10 +59,4 @@ def collectLog(message,state):
 
 # fix filepath
 def checkPath(filepath):
-    result = filepath
-    if(sys.platform.startswith('linux')):
-        result = filepath.replace("\\", "/")
-    elif (sys.platform.startswith('win32')):
-        result = filepath.replace("/","\\")
-    logging.info("platform detected: " + str(sys.platform))
-    return result
+    return os.path.normpath(filepath)

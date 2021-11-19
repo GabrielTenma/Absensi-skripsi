@@ -24,6 +24,3 @@ def matchImagePerson(temperature, image):
         util.collectLog("[POST] matchImagePerson: occured " + sys.exc_info(),util.Logstate.ERROR)
         #print(traceback.format_exc())
     return result
-
-# example api
-print(matchImagePerson('20',appConfig.TAKE_PICTURE_FILENAME))
