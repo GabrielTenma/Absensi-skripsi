@@ -29,6 +29,11 @@ import numpy as np
 import array as arr
 import sys
 
+# board
+import busio
+import board
+import adafruit_amg88xx
+
 # common
 import App.util.CommonUtil as util
 import App.config.variable.ApplicationConstant as appConfig
@@ -138,23 +143,37 @@ class Ui_MainWindow(QtWidgets.QWidget):
 # Thread Class (videoThread)
 class VideoThread(QThread):
     change_pixmap_signal = pyqtSignal(np.ndarray)
+    
+    i2c = busio.I2C(board.SCL, board.SDA)                   # init board raspberry
+    sensorTc = adafruit_amg88xx.AMG88XX(i2c)                # init sensor AMG8833g
+    time.sleep(1)
+
+    cap = cv2.VideoCapture(appConfig.CAMERA_INDEX)          # set cap as cv2 videocapture
+    #cap.set(cv2.CAP_PROP_FPS,appConfig.CAMERA_FPS)          # set camera fps max limit
+
     def run(self):
+        
         # check file cascade
         log.info("[CHECK] Cascade Path: "+ util.checkPath(appConfig.FILE_CASCADE))
-        
+
         # cv face detect with default haarcascade
         faceDetect = cv2.CascadeClassifier(util.checkPath(appConfig.FILE_CASCADE));
 
         # capture from web cam use while for realtime
         while True:
             # separate ret and frame
-            ret, cv_img = cap.read()
-            
+            ret, cv_img = self.cap.read()
+
             # set image(cv) to grayscale bw
             gray = cv2.cvtColor(cv_img,cv2.COLOR_BGR2GRAY)
-            faces = faceDetect.detectMultiScale(gray,1.3,5)
-            
-            self.thermalDetectValue()
+            #faces = faceDetect.detectMultiScale(gray,1.3,5)
+            faces = faceDetect.detectMultiScale(gray, scaleFactor=1.5 , minNeighbors=6, minSize=(1, 1))
+
+            if(len(faces) > 0):
+                # create rectangle in face
+                for (x,y,w,h) in faces:
+                    cv2.rectangle(cv_img,(x,y), (x+w,y+h),(0,255,0),2)
+                self.thermalDetectValue()
 
             # set variable if detect face
             globalVariable.isDetectFace = True if (len(faces) >= 1) else False
@@ -162,14 +181,10 @@ class VideoThread(QThread):
             # count detected face
             globalVariable.faceDetectedCount = len(faces)
 
-            # create rectangle in face
-            for (x,y,w,h) in faces:
-                cv2.rectangle(cv_img,(x,y), (x+w,y+h),(0,255,0),2)
-
             if ret:
                 self.change_pixmap_signal.emit(cv_img)
 
-            if(globalVariable.faceDetectedCount == 1):
+            if(globalVariable.faceDetectedCount == 1 and globalVariable.thermalMaxTemp > 25):
                 self.captureFaceImage(cv_img)
 
             util.collectLog("Thermal Max Temperature: "+ str(globalVariable.thermalMaxTemp),Logstate.INFO)
@@ -177,8 +192,8 @@ class VideoThread(QThread):
     # func :: get value from thermal
     def thermalDetectValue(self):
         # pixel stack data thermal (8x8)
-        pixels = globalVariable.sensorTc.pixels                              # alias pixel as sensorTc pixels
-        time.sleep(0.5) 
+        globalVariable.thermalMaxTemp = 0
+        pixels = self.sensorTc.pixels                              # alias pixel as sensorTc pixels
         for x in range(len(pixels)):
             for y in range(len(pixels[0])):
                 # save higher value thermal temp
@@ -194,9 +209,9 @@ class VideoThread(QThread):
 
     # func :: send image & thermal to endpoint API
     def deliveryAttendance(self):
-        delivery.matchImagePerson(globalVariable.thermalMaxTemp, util.checkPath(appConfig.TAKE_PICTURE_FILENAME))
-        globalVariable.thermalMaxTemp = 0 #reset
-        log.info('RESET THERMAL TEMP')
+        if(globalVariable.thermalMaxTemp > 0):
+            print(delivery.matchImagePerson(globalVariable.thermalMaxTemp, util.checkPath(appConfig.TAKE_PICTURE_FILENAME)))
+            globalVariable.thermalMaxTemp = 0
 
 # Main app first load
 if __name__ == "__main__":
@@ -207,9 +222,8 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)                  # alias QtWidget
     MainWindow = QtWidgets.QMainWindow()                    # set mainwindow as QtWidget
     ui = Ui_MainWindow()                                    # alias ui_Mainwindow
-    cap = cv2.VideoCapture(appConfig.CAMERA_INDEX)          # set cap as cv2 videocapture
-    cap.set(cv2.CAP_PROP_FPS,appConfig.CAMERA_FPS)          # set camera fps max limit
 
     ui.setupUi(MainWindow)                                  # load ui
     MainWindow.show()                                       # call mainwindow to show
+    cv2.destroyAllWindows()
     sys.exit(app.exec())                                    # exit when mainwindow closed

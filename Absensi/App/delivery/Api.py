@@ -22,7 +22,6 @@ def matchImagePerson(temperature, image):
         result = r.json()['success'] #return true/false
         util.collectLog("[POST] matchImagePerson: OK, " + result,util.Logstate.ERROR)
     except:
-        util.collectLog("[POST] matchImagePerson: occured ",util.Logstate.ERROR)
-        sys.exc_info()
+        util.collectLog("[POST] matchImagePerson: occured "+ str(sys.exc_info()),util.Logstate.ERROR)
         #print(traceback.format_exc())
     return result
