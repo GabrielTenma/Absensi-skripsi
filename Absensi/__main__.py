@@ -177,7 +177,6 @@ class VideoThread(QThread):
     # func :: get value from thermal
     def thermalDetectValue(self):
         # pixel stack data thermal (8x8)
-        time.sleep(1)
         pixels = globalVariable.sensorTc.pixels                              # alias pixel as sensorTc pixels 
         for x in range(len(pixels)):
             for y in range(len(pixels[0])):
