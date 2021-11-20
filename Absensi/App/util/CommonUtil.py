@@ -16,6 +16,7 @@ class Logstate(Enum):
     ERROR = 1
     DEBUG = 2
 
+# check board typ
 def checkAdafruitBoard():
     detector = Detector()
 

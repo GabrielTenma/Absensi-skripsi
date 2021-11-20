@@ -132,7 +132,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
     # func :: read cap & save img as file
     def take_picture(self):
         ret, img = cap.read()
-        cv2.imwrite(appConfig.TAKE_PICTURE_FILENAME, img)
+        cv2.imwrite(util.checkPath(appConfig.TAKE_PICTURE_FILENAME), img)
         log.info('[TAKEPICTURE] Image exported: '+ appConfig.TAKE_PICTURE_FILENAME)
 
     # func :: scan image
@@ -160,17 +160,16 @@ class VideoThread(QThread):
     change_pixmap_signal = pyqtSignal(np.ndarray)
     def run(self):
         # check file cascade
-        log.info("[CHECK] Cascade Path: "+ str(util.checkFileIsExist(appConfig.FILE_CASCADE)))
+        log.info("[CHECK] Cascade Path: "+ str(util.checkPath(appConfig.FILE_CASCADE)))
         
         # cv face detect with default haarcascade
         faceDetect = cv2.CascadeClassifier(util.checkPath(appConfig.FILE_CASCADE));
 
-        # capture from web cam
+        # capture from web cam use while for realtime
         while True:
             # separate ret and frame
             ret, cv_img = cap.read()
-            # load thermaldetect temp
-
+            
             # set image(cv) to grayscale bw
             gray = cv2.cvtColor(cv_img,cv2.COLOR_BGR2GRAY)
             faces = faceDetect.detectMultiScale(gray,1.3,5)
