@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>607</width>
-    <height>488</height>
+    <width>396</width>
+    <height>365</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,27 +17,46 @@
    <widget class="QGraphicsView" name="graphicsView">
     <property name="geometry">
      <rect>
-      <x>100</x>
-      <y>70</y>
+      <x>0</x>
+      <y>0</y>
       <width>401</width>
       <height>261</height>
      </rect>
     </property>
    </widget>
-   <widget class="QPushButton" name="pbScan">
+   <widget class="QLabel" name="statusLabel">
     <property name="geometry">
      <rect>
-      <x>100</x>
-      <y>350</y>
-      <width>401</width>
+      <x>10</x>
+      <y>270</y>
+      <width>371</width>
       <height>51</height>
      </rect>
     </property>
-    <property name="text">
-     <string>Scan</string>
+    <property name="font">
+     <font>
+      <family>Arial</family>
+      <weight>75</weight>
+      <bold>true</bold>
+     </font>
     </property>
-    <property name="flat">
-     <bool>false</bool>
+    <property name="frameShape">
+     <enum>QFrame::Box</enum>
+    </property>
+    <property name="frameShadow">
+     <enum>QFrame::Plain</enum>
+    </property>
+    <property name="text">
+     <string>Status : Ready</string>
+    </property>
+    <property name="textFormat">
+     <enum>Qt::PlainText</enum>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignTop</set>
+    </property>
+    <property name="wordWrap">
+     <bool>true</bool>
     </property>
    </widget>
   </widget>
@@ -46,7 +65,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>607</width>
+     <width>396</width>
      <height>22</height>
     </rect>
    </property>

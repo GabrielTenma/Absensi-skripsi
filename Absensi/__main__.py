@@ -52,10 +52,10 @@ class Ui_MainWindow(QtWidgets.QWidget):
         MainWindow.resize(self.display_width, self.display_height)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-        self.pbScan = QtWidgets.QPushButton(self.centralwidget)
-        self.pbScan.setGeometry(QtCore.QRect(100, 350, 401, 51))
-        self.pbScan.setFlat(False)
-        self.pbScan.setObjectName("pbScan")
+        # self.pbScan = QtWidgets.QPushButton(self.centralwidget)
+        # self.pbScan.setGeometry(QtCore.QRect(100, 350, 401, 51))
+        # self.pbScan.setFlat(False)
+        # self.pbScan.setObjectName("pbScan")
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 607, 22))
@@ -75,7 +75,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         MainWindow.setWindowTitle(_translate("MainWindow", "Attendance Scan"))
 
         # button :: pbscan
-        self.pbScan.setText(_translate("MainWindow", "Scan"))
+        #self.pbScan.setText(_translate("MainWindow", "Scan"))
         #self.pbScan.clicked.connect(self.scanImage)
 
         # load webcam
@@ -210,7 +210,7 @@ class VideoThread(QThread):
     # func :: send image & thermal to endpoint API
     def deliveryAttendance(self):
         if(globalVariable.thermalMaxTemp > 0):
-            print(delivery.matchImagePerson(globalVariable.thermalMaxTemp, util.checkPath(appConfig.TAKE_PICTURE_FILENAME)))
+            delivery.matchImagePerson(globalVariable.thermalMaxTemp, util.checkPath(appConfig.TAKE_PICTURE_FILENAME))
             globalVariable.thermalMaxTemp = 0
 
 # Main app first load
@@ -225,5 +225,5 @@ if __name__ == "__main__":
 
     ui.setupUi(MainWindow)                                  # load ui
     MainWindow.show()                                       # call mainwindow to show
-    cv2.destroyAllWindows()
+    cv2.destroyAllWindows()                                 # close all cv2
     sys.exit(app.exec())                                    # exit when mainwindow closed

@@ -17,6 +17,3 @@ HEAD_BEARER = {'Authorization': 'Bearer ' + BEARER_TOKEN}
 
 # API ENDPOINT
 URL_FACE_RECOG = "absen/check"
-
-# LOG TRACE FORMAT
-LOG_REQUEST_POST = "[POST] "
