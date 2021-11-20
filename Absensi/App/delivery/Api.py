@@ -21,6 +21,6 @@ def matchImagePerson(temperature, image):
         r = requests.post(url= util.endpointCall(appConfig.URL_FACE_RECOG), headers= appConfig.HEAD_BEARER, data=data, files=files)
         result = r.json()['content']['nama']
     except:
-        util.collectLog("[POST] matchImagePerson: occured " + sys.exc_info(),util.Logstate.ERROR)
+        util.collectLog("[POST] matchImagePerson: occured " + str(sys.exc_info()),util.Logstate.ERROR)
         #print(traceback.format_exc())
     return result

@@ -60,4 +60,4 @@ def collectLog(message,state):
 
 # fix filepath
 def checkPath(filepath):
-    return os.path.normpath(filepath)
+    return str(os.path.normpath(filepath))
