@@ -3,7 +3,6 @@ import time
 import busio
 import board
 import adafruit_amg88xx
-from adafruit_bus_device.i2c_device import I2CDevice
 
 # Variables
 thermalMaxTemp = 0.0                                    # thermal maximum temp variable (thermalMaxTemp <- thermalDetectValue())
@@ -12,6 +11,6 @@ faceDetectedCount = 0                                   # detected face count
 
 # Load
 i2c = busio.I2C(board.SCL, board.SDA)                   # init board raspberry
-#sensorTc = adafruit_amg88xx.AMG88XX(i2c)                # init sensor AMG8833g
-sensorTc = I2CDevice(i2c, 0x69)
+sensorTc = adafruit_amg88xx.AMG88XX(i2c)                # init sensor AMG8833g
+#sensorTc = I2CDevice(i2c, 0x69)
 #time.sleep(3)                                           # need delay for read board io
