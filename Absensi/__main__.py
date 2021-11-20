@@ -71,7 +71,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
         # button :: pbscan
         self.pbScan.setText(_translate("MainWindow", "Scan"))
-        self.pbScan.clicked.connect(self.scanImage)
+        #self.pbScan.clicked.connect(self.scanImage)
 
         # load webcam
         self.initializeWebcam()
