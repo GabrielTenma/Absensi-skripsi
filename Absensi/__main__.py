@@ -21,12 +21,18 @@ from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
 from qtpy import QtWidgets, QtCore
 from QNotifications import QNotificationArea
 import logging as log
+import time
 
 # data lib
 import cv2
 import numpy as np
 import array as arr
 import sys
+
+# board
+import busio
+import board
+import adafruit_amg88xx
 
 # common
 import App.util.CommonUtil as util
@@ -70,7 +76,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
 
         # button :: pbscan
         self.pbScan.setText(_translate("MainWindow", "Scan"))
-        self.pbScan.clicked.connect(self.scanImage)
+        #self.pbScan.clicked.connect(self.scanImage)
 
         # load webcam
         self.initializeWebcam()
@@ -128,76 +134,84 @@ class Ui_MainWindow(QtWidgets.QWidget):
         p = convert_to_Qt_format.scaled(401, 261, QtCore.Qt.AspectRatioMode.KeepAspectRatio)
         return QtGui.QPixmap.fromImage(p)
 
-    # func :: read cap & save img as file
-    def take_picture(self):
-        ret, img = cap.read()
-        cv2.imwrite(appConfig.TAKE_PICTURE_FILENAME, img)
-        log.info('[TAKEPICTURE] Image exported: '+ appConfig.TAKE_PICTURE_FILENAME)
-
-    # func :: scan image
-    def scanImage(self):
-        self.pbScan.setText("Please Wait..")
-        self.pbScan.isEnabled = False
-        self.take_picture()
-        self.pbScan.setText("Scan")
-        self.pbScan.isEnabled = True
-        self.sendNotify('saved picture!',0)
-
     # func :: Send notification
     def sendNotify(self, msg, style):
         index = ['primary','info','danger']
         self.qna.display(msg,index[style],2000)
-
-    # func :: send request & recv user name
-    def deliveryImage(self, imagePath):
-        delivery.matchImagePerson(globalVariable.thermalMaxTemp, imagePath)
-
     
 
 # Thread Class (videoThread)
 class VideoThread(QThread):
     change_pixmap_signal = pyqtSignal(np.ndarray)
+    
+    i2c = busio.I2C(board.SCL, board.SDA)                   # init board raspberry
+    sensorTc = adafruit_amg88xx.AMG88XX(i2c)                # init sensor AMG8833g
+    time.sleep(1)
+
+    cap = cv2.VideoCapture(appConfig.CAMERA_INDEX)          # set cap as cv2 videocapture
+    #cap.set(cv2.CAP_PROP_FPS,appConfig.CAMERA_FPS)          # set camera fps max limit
+
     def run(self):
-        # check file cascade
-        log.info("[CHECK] Cascade Path: "+ str(util.checkFileIsExist(appConfig.FILE_CASCADE)))
         
+        # check file cascade
+        log.info("[CHECK] Cascade Path: "+ util.checkPath(appConfig.FILE_CASCADE))
+
         # cv face detect with default haarcascade
         faceDetect = cv2.CascadeClassifier(util.checkPath(appConfig.FILE_CASCADE));
 
-        # capture from web cam
+        # capture from web cam use while for realtime
         while True:
             # separate ret and frame
-            ret, cv_img = cap.read()
-            # load thermaldetect temp
+            ret, cv_img = self.cap.read()
 
             # set image(cv) to grayscale bw
             gray = cv2.cvtColor(cv_img,cv2.COLOR_BGR2GRAY)
-            faces = faceDetect.detectMultiScale(gray,1.3,5)
-            
-            self.thermalDetectValue()
+            #faces = faceDetect.detectMultiScale(gray,1.3,5)
+            faces = faceDetect.detectMultiScale(gray, scaleFactor=1.5 , minNeighbors=6, minSize=(1, 1))
+
+            if(len(faces) > 0):
+                # create rectangle in face
+                for (x,y,w,h) in faces:
+                    cv2.rectangle(cv_img,(x,y), (x+w,y+h),(0,255,0),2)
+                self.thermalDetectValue()
 
             # set variable if detect face
             globalVariable.isDetectFace = True if (len(faces) >= 1) else False
 
-            # create rectangle in face
-            for (x,y,w,h) in faces:
-                cv2.rectangle(cv_img,(x,y), (x+w,y+h),(0,255,0),2)
+            # count detected face
+            globalVariable.faceDetectedCount = len(faces)
 
             if ret:
                 self.change_pixmap_signal.emit(cv_img)
+
+            if(globalVariable.faceDetectedCount == 1 and globalVariable.thermalMaxTemp > 25):
+                self.captureFaceImage(cv_img)
 
             util.collectLog("Thermal Max Temperature: "+ str(globalVariable.thermalMaxTemp),Logstate.INFO)
     
     # func :: get value from thermal
     def thermalDetectValue(self):
         # pixel stack data thermal (8x8)
-        pixels = globalVariable.sensorTc.pixels                              # alias pixel as sensorTc pixels 
+        globalVariable.thermalMaxTemp = 0
+        pixels = self.sensorTc.pixels                              # alias pixel as sensorTc pixels
         for x in range(len(pixels)):
             for y in range(len(pixels[0])):
                 # save higher value thermal temp
                 if(pixels[x][y] > globalVariable.thermalMaxTemp):
                     globalVariable.thermalMaxTemp = pixels[x][y]
 
+    # func :: capture face & export to as image
+    def captureFaceImage(self,img):
+        cv2.imwrite(util.checkPath(appConfig.TAKE_PICTURE_FILENAME), img)
+        log.info('[TAKEPICTURE] Image exported: '+ util.checkPath(appConfig.TAKE_PICTURE_FILENAME))
+        self.deliveryAttendance()
+        time.sleep(7)
+
+    # func :: send image & thermal to endpoint API
+    def deliveryAttendance(self):
+        if(globalVariable.thermalMaxTemp > 0):
+            print(delivery.matchImagePerson(globalVariable.thermalMaxTemp, util.checkPath(appConfig.TAKE_PICTURE_FILENAME)))
+            globalVariable.thermalMaxTemp = 0
 
 # Main app first load
 if __name__ == "__main__":
@@ -208,9 +222,8 @@ if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)                  # alias QtWidget
     MainWindow = QtWidgets.QMainWindow()                    # set mainwindow as QtWidget
     ui = Ui_MainWindow()                                    # alias ui_Mainwindow
-    cap = cv2.VideoCapture(appConfig.CAMERA_INDEX)          # set cap as cv2 videocapture
-    cap.set(cv2.CAP_PROP_FPS,appConfig.CAMERA_FPS)          # set camera fps max limit
 
     ui.setupUi(MainWindow)                                  # load ui
     MainWindow.show()                                       # call mainwindow to show
+    cv2.destroyAllWindows()
     sys.exit(app.exec())                                    # exit when mainwindow closed
