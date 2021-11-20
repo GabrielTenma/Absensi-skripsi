@@ -7,6 +7,7 @@ import adafruit_amg88xx
 # Variables
 thermalMaxTemp = 0.0                                    # thermal maximum temp variable (thermalMaxTemp <- thermalDetectValue())
 isDetectFace = False                                    # boolean val is steady detect face (isDetectValue <- VideoThread)
+faceDetectedCount = 0                                   # detected face count
 
 # Load
 i2c = busio.I2C(board.SCL, board.SDA)                   # init board raspberry

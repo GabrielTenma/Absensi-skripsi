@@ -129,30 +129,10 @@ class Ui_MainWindow(QtWidgets.QWidget):
         p = convert_to_Qt_format.scaled(401, 261, QtCore.Qt.AspectRatioMode.KeepAspectRatio)
         return QtGui.QPixmap.fromImage(p)
 
-    # func :: read cap & save img as file
-    def take_picture(self):
-        ret, img = cap.read()
-        cv2.imwrite(util.checkPath(appConfig.TAKE_PICTURE_FILENAME), img)
-        log.info('[TAKEPICTURE] Image exported: '+ appConfig.TAKE_PICTURE_FILENAME)
-
-    # func :: scan image
-    def scanImage(self):
-        self.pbScan.setText("Please Wait..")
-        self.pbScan.isEnabled = False
-        self.take_picture()
-        self.pbScan.setText("Scan")
-        self.pbScan.isEnabled = True
-        self.sendNotify('saved picture!',0)
-
     # func :: Send notification
     def sendNotify(self, msg, style):
         index = ['primary','info','danger']
         self.qna.display(msg,index[style],2000)
-
-    # func :: send request & recv user name
-    def deliveryImage(self, imagePath):
-        delivery.matchImagePerson(globalVariable.thermalMaxTemp, imagePath)
-
     
 
 # Thread Class (videoThread)
@@ -160,7 +140,7 @@ class VideoThread(QThread):
     change_pixmap_signal = pyqtSignal(np.ndarray)
     def run(self):
         # check file cascade
-        log.info("[CHECK] Cascade Path: "+ str(util.checkPath(appConfig.FILE_CASCADE)))
+        log.info("[CHECK] Cascade Path: "+ util.checkPath(appConfig.FILE_CASCADE))
         
         # cv face detect with default haarcascade
         faceDetect = cv2.CascadeClassifier(util.checkPath(appConfig.FILE_CASCADE));
@@ -179,12 +159,18 @@ class VideoThread(QThread):
             # set variable if detect face
             globalVariable.isDetectFace = True if (len(faces) >= 1) else False
 
+            # count detected face
+            globalVariable.faceDetectedCount = len(faces)
+
             # create rectangle in face
             for (x,y,w,h) in faces:
                 cv2.rectangle(cv_img,(x,y), (x+w,y+h),(0,255,0),2)
 
             if ret:
                 self.change_pixmap_signal.emit(cv_img)
+
+            if(globalVariable.faceDetectedCount == 1):
+                self.captureFaceImage(cv_img)
 
             util.collectLog("Thermal Max Temperature: "+ str(globalVariable.thermalMaxTemp),Logstate.INFO)
     
@@ -199,6 +185,18 @@ class VideoThread(QThread):
                 if(pixels[x][y] > globalVariable.thermalMaxTemp):
                     globalVariable.thermalMaxTemp = pixels[x][y]
 
+    # func :: capture face & export to as image
+    def captureFaceImage(self,img):
+        cv2.imwrite(util.checkPath(appConfig.TAKE_PICTURE_FILENAME), img)
+        log.info('[TAKEPICTURE] Image exported: '+ util.checkPath(appConfig.TAKE_PICTURE_FILENAME))
+        self.deliveryAttendance()
+        time.sleep(7)
+
+    # func :: send image & thermal to endpoint API
+    def deliveryAttendance(self):
+        delivery.matchImagePerson(globalVariable.thermalMaxTemp, util.checkPath(appConfig.TAKE_PICTURE_FILENAME))
+        globalVariable.thermalMaxTemp = 0 #reset
+        log.info('RESET THERMAL TEMP')
 
 # Main app first load
 if __name__ == "__main__":

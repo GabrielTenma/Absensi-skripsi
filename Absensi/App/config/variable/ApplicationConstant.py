@@ -8,7 +8,7 @@ CAMERA_INDEX = 0                                                     # camera we
 CAMERA_FPS = 25                                                      # camera fps max limit
 FILE_CASCADE = 'App/assets/haarcascade_frontalface_default.xml'      # cascade file location
 LOG_FILENAME = 'verbose.log'                                         # log filename
-TAKE_PICTURE_FILENAME = 'App/assets/sample1.jpeg'                    # take picture filename
+TAKE_PICTURE_FILENAME = 'App/assets/captured.jpeg'                   # take picture filename
 
 # API CONFIGURATION
 ENDPOINT_URL = "https://attendance-serviceku.herokuapp.com/"
