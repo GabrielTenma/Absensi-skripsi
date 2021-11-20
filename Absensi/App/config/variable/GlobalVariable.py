@@ -12,4 +12,4 @@ faceDetectedCount = 0                                   # detected face count
 # Load
 i2c = busio.I2C(board.SCL, board.SDA)                   # init board raspberry
 sensorTc = adafruit_amg88xx.AMG88XX(i2c)                # init sensor AMG8833g
-time.sleep(3)                                           # need delay for read board io
+#time.sleep(3)                                           # need delay for read board io
