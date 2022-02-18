@@ -16,6 +16,7 @@ class Logstate(Enum):
     ERROR = 1
     DEBUG = 2
 
+# check board typ
 def checkAdafruitBoard():
     detector = Detector()
 
@@ -38,6 +39,10 @@ def checkHttpStatus(request):
     else:
         return False
 
+# endpoint path str
+def endpointCall(address):
+    return appConfig.ENDPOINT_URL + address
+
 # check file is exist
 def checkFileIsExist(filePath):
     if(os.path.isfile(filePath)):
@@ -55,10 +60,4 @@ def collectLog(message,state):
 
 # fix filepath
 def checkPath(filepath):
-    result = filepath
-    if(sys.platform.startswith('linux')):
-        result = filepath.replace("\\", "/")
-    elif (sys.platform.startswith('win32')):
-        result = filepath.replace("/","\\")
-    logging.info("platform detected: " + str(sys.platform))
-    return result
+    return str(os.path.normpath(filepath))

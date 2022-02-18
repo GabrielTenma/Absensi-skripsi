@@ -2,7 +2,8 @@ todo merge:
 - init i2c sensor (ok)
 - suhu temperature realtime (ok)
 - penambahan deteksi board ada apa kgk (ok)
-- hit api to endpoint (send/recv) (ok)
+- hit api to endpoint (send/recv) (re-test again cause endpoint changed & re-structure class may showed new problem :( )
 
 pending todo:
 - auto save image setelah dapet face nya
+- remove button & countdown 5sec. make sure only one face, if detect 2 face, cancel scan!
