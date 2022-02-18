@@ -176,7 +176,7 @@ class VideoThread(QThread):
 
             util.collectLog("Thermal Max Temperature: "+ str(globalVariable.thermalMaxTemp),Logstate.INFO)
 
-            timer = threading.Timer(60.0, log.info(""))
+            timer = threading.Timer(60.0, print('okay'))
             timer.start()
     
     # func :: get value from thermal
