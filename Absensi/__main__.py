@@ -16,6 +16,7 @@ import array as arr
 import sys
 import threading
 import time
+import asyncio
 
 # board
 import busio
@@ -140,12 +141,24 @@ class VideoThread(QThread):
     #cap.set(cv2.CAP_PROP_FPS,appConfig.CAMERA_FPS)          # set camera fps max limit
 
     def run(self):
-        
+
         # check file cascade
         log.info("[CHECK] Cascade Path: "+ util.checkPath(appConfig.FILE_CASCADE))
 
         # cv face detect with default haarcascade
         faceDetect = cv2.CascadeClassifier(util.checkPath(appConfig.FILE_CASCADE));
+        
+        # realtime face coordinate X Y
+        cordinateX = 0
+        cordinateY = 0
+
+        # updated face coordinate X Y after capture face
+        lastCapturedX = 0
+        lastCapturedY = 0
+
+        # send request api attendance delay
+        sendDelay = 15
+
         # camera = True
         # capture from web cam use while for realtime
         while True:
@@ -161,11 +174,13 @@ class VideoThread(QThread):
                 # create rectangle in face
                 for (x,y,w,h) in faces:
                     cv2.rectangle(cv_img,(x,y), (x+w,y+h),(0,255,0),2)
+                    cordinateX = x
+                    cordinateY = y
                 self.thermalDetectValue()
 
             # set variable if detect face
             globalVariable.isDetectFace = True if (len(faces) >= 1) else False
-
+            
             # count detected face
             globalVariable.faceDetectedCount = len(faces)
 
@@ -173,11 +188,17 @@ class VideoThread(QThread):
                 self.change_pixmap_signal.emit(cv_img)
 
             if(globalVariable.faceDetectedCount == 1 and globalVariable.thermalMaxTemp > 25):            
-                # print("sending data to server")
-                self.captureFaceImage(cv_img)
+                if(lastCapturedX != cordinateX and lastCapturedY != cordinateY and sendDelay < 1):
+                    # print("sending data to server")
+                    self.captureFaceImage(cv_img)
+                    lastCapturedX = cordinateX
+                    lastCapturedY = cordinateY
+                    sendDelay = 15
+                else:
+                    sendDelay -=1
+                    util.collectLog("FaceDetect coordinate is same. Skipped!", Logstate.INFO)
 
-            util.collectLog("Thermal Max Temperature: "+ str(globalVariable.thermalMaxTemp),Logstate.INFO)
-            time.sleep(5)
+            util.collectLog("Thermal Max Temperature: "+ str(globalVariable.thermalMaxTemp), Logstate.INFO)
             # print("After 5 seconds")
 
     
@@ -191,19 +212,20 @@ class VideoThread(QThread):
                 # save higher value thermal temp
                 if(pixels[x][y] > globalVariable.thermalMaxTemp):
                     globalVariable.thermalMaxTemp = pixels[x][y]
+        globalVariable.thermalMaxTemp -=3
 
     # func :: capture face & export to as image
     def captureFaceImage(self,img):
         cv2.imwrite(util.checkPath(appConfig.TAKE_PICTURE_FILENAME), img)
         log.info('[TAKEPICTURE] Image exported: '+ util.checkPath(appConfig.TAKE_PICTURE_FILENAME))
         self.deliveryAttendance()
-        time.sleep(7)
 
     # func :: send image & thermal to endpoint API
     def deliveryAttendance(self):
         if(globalVariable.thermalMaxTemp > 0):
             delivery.matchImagePerson(globalVariable.thermalMaxTemp, util.checkPath(appConfig.TAKE_PICTURE_FILENAME))
             globalVariable.thermalMaxTemp = 0
+        time.sleep(1)
 
 # Main app first load
 if __name__ == "__main__":
