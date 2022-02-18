@@ -173,12 +173,12 @@ class VideoThread(QThread):
                 self.change_pixmap_signal.emit(cv_img)
 
             if(globalVariable.faceDetectedCount == 1 and globalVariable.thermalMaxTemp > 25):            
-                print("sending data to server")
+                # print("sending data to server")
                 self.captureFaceImage(cv_img)
 
             util.collectLog("Thermal Max Temperature: "+ str(globalVariable.thermalMaxTemp),Logstate.INFO)
             time.sleep(5)
-            print("After 5 seconds")
+            # print("After 5 seconds")
 
     
     # func :: get value from thermal
