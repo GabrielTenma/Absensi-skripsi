@@ -88,7 +88,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.thread.change_pixmap_signal.connect(self.update_image)
         
         # start the thread
-        self.thread.start()
+        # self.thread.start()
 
 
     # func :: load notify
@@ -145,7 +145,7 @@ class VideoThread(QThread):
 
         # cv face detect with default haarcascade
         faceDetect = cv2.CascadeClassifier(util.checkPath(appConfig.FILE_CASCADE));
-
+        # camera = True
         # capture from web cam use while for realtime
         while True:
             # separate ret and frame
