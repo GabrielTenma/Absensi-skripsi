@@ -1,20 +1,6 @@
-#⡀⠀⢰⣙⢸⡇⠀⠨⣿⣿⣿⣿⣿⣿⣮⡁⠀⣆⣠⡁⠀⣻⣯⣀⠀⠀⠀⠀⠀⠀
-#⣿⣦⡀⠈⠙⢇⠀⠀⣻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⣿⣿⣝⣿⣮⡆⠀⠀⠀⠀
-#⣿⣿⣿⣦⡀⣠⣴⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⢿⣫⠿⠋⠁⠀⠀⠀⠀
-#⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⠿⠿⢻⣿⣿⣿⣿⣿⡇⠘⡄⠀⠀⠀⠀⠀
-#⣻⠟⣽⣿⣿⣿⣿⣿⣿⣿⣿⢛⣩⣟⢷⣾⣿⣿⣿⣿⣿⣿⡇⠀⢹⣦⣄⣀⡁⣀
-#⠃⣸⣿⣿⣿⣿⡏⠟⢛⠀⠨⠻⠛⠻⠿⢽⣦⣦⠾⢿⣿⡟⠀⠀⢸⣿⣿⣿⣿⢿
-#⣾⣿⣿⣿⣿⠁⢸⣦⣤⢃⠢⠤⣭⣦⣄⠊⠏⠀⠁⢸⣿⣿⣷⣶⣼⣿⣿⣿⣿⣿
-#⣿⣿⡇⢻⡇⢂⠘⡃⠈⢙⣿⣾⣤⣤⠀⠀⠀⠀⠀⢈⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
-#⠛⠉⢁⡎⢿⣝⣳⡇⡜⠻⠊⠁⠀⠀⠀⠀⠀⠀⠀⠊⠀⢻⣿⣿⣿⣿⣿⣿⣿⣿
-#⠀⠀⠘⣈⠄⢻⣿⣧⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠠⢁⣸⣿⡿⡛⣿⣿⣿⣿⣿
-#⠀⠀⠀⢘⣴⣦⡹⣿⠿⣶⣷⣄⡀⠀⠀⠀⠀⠀⢀⣴⣿⣿⣿⣿⢧⣿⣿⣿⣿⣿
-#⣠⣠⣴⣿⠿⠋⣿⡷⠦⣿⣿⣿⣿⣿⣿⣿⣿⣡⣿⣿⣿⠧⣡⣥⣸⣿⣿⣿⣿⣿
-#⠀⠀⠀⠀⠀⣼⡿⢃⡂⣿⣿⣿⣿⣸⣿⣿⣿⣿⣿⣿⢯⣼⣿⣿⣿⣿⣿⣿⣿⣿
-#⠀⠀⠀⠠⠚⠋⠀⣬⡐⢸⢈⣿⣿⣿⣿⣿⣿⣿⡟⣻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
-#⠀⠀⠀⢀⣀⣤⣼⣿⣿⣧⢿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
 
 # drawer ui lib
+from concurrent.futures import thread
 from random import randrange
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
@@ -27,6 +13,7 @@ import cv2
 import numpy as np
 import array as arr
 import sys
+import threading
 
 # common
 import App.util.CommonUtil as util
@@ -187,6 +174,9 @@ class VideoThread(QThread):
                 self.change_pixmap_signal.emit(cv_img)
 
             util.collectLog("Thermal Max Temperature: "+ str(globalVariable.thermalMaxTemp),Logstate.INFO)
+
+            timer = threading.Timer(60.0, log.info(""))
+            timer.start()
     
     # func :: get value from thermal
     def thermalDetectValue(self):
