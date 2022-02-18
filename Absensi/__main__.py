@@ -15,6 +15,7 @@ import numpy as np
 import array as arr
 import sys
 import threading
+import time
 
 # board
 import busio
@@ -88,7 +89,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         self.thread.change_pixmap_signal.connect(self.update_image)
         
         # start the thread
-        # self.thread.start()
+        self.thread.start()
 
 
     # func :: load notify
@@ -171,13 +172,14 @@ class VideoThread(QThread):
             if ret:
                 self.change_pixmap_signal.emit(cv_img)
 
+            print("sending data to server")
             if(globalVariable.faceDetectedCount == 1 and globalVariable.thermalMaxTemp > 25):
                 self.captureFaceImage(cv_img)
 
             util.collectLog("Thermal Max Temperature: "+ str(globalVariable.thermalMaxTemp),Logstate.INFO)
+            time.sleep(5)
+            print("Done send to server")
 
-            timer = threading.Timer(60.0, print('okay'))
-            timer.start()
     
     # func :: get value from thermal
     def thermalDetectValue(self):
