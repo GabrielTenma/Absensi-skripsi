@@ -13,14 +13,19 @@ def rawPost(address, param, data):
 # send image & receive person name :: POST
 def matchImagePerson(temperature, image):
     result = ''
+    nama = ''
+    
     try:
         print(image)
         data = {'suhu':temperature}
         files=[('file',('file.jpeg',open(image,'rb'),'image/jpeg'))]
-        r = requests.post(url= util.endpointCall(appConfig.URL_FACE_RECOG), headers= appConfig.HEAD_BEARER, data=data, files=files)
-        result = r.json()['success'] #return true/false
-        util.collectLog("[POST] matchImagePerson: OK, " + str(result),util.Logstate.ERROR)
+        r = requests.post(url= util.endpointCall(appConfig.URL_FACE_RECOG), verify=False, timeout=15, headers= appConfig.HEAD_BEARER, data=data, files=files)
+        res = r.json()
+        result = res['success'] #return true/false
+        if(result):
+            nama = res['obj']['nama']
+        util.collectLog("[POST] matchImagePerson: OK, " + str(result) + str("\nname: " + nama),util.Logstate.INFO)
     except:
-        util.collectLog("[POST] matchImagePerson: occured "+ str(sys.exc_info()),util.Logstate.ERROR)
+        util.collectLog("[POST] matchImagePerson: occured "+ str(sys.exc_info()),util.Logstate.INFO)
         #print(traceback.format_exc())
-    return result
+    return res

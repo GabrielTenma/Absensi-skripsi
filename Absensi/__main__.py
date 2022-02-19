@@ -2,6 +2,7 @@
 # drawer ui lib
 from concurrent.futures import thread
 from random import randrange
+from unicodedata import name
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import pyqtSignal, pyqtSlot, Qt, QThread
 from qtpy import QtWidgets, QtCore
@@ -16,6 +17,7 @@ import array as arr
 import sys
 import threading
 import time
+import asyncio
 
 # board
 import busio
@@ -76,6 +78,13 @@ class Ui_MainWindow(QtWidgets.QWidget):
     # func :: load webcam
     def initializeWebcam(self):
 
+        # Create label Username
+        self.labelNama = QtWidgets.QLabel(self.centralwidget)
+        self.labelNama.setGeometry(100,100,800,600)
+        self.labelNama.setObjectName('labelNama')
+        self.labelNama.setText(globalVariable.nama)
+        self.labelNama.show()
+
         # create imagelabel display
         self.image_label = QtWidgets.QLabel(self.centralwidget)
         self.image_label.setGeometry(QtCore.QRect(100, 70, 401, 261))
@@ -87,10 +96,16 @@ class Ui_MainWindow(QtWidgets.QWidget):
         
         # connect its signal to the update_image slot
         self.thread.change_pixmap_signal.connect(self.update_image)
-        
+        self.thread.labelUsername.connect(self.usernamePrint)
         # start the thread
         self.thread.start()
-
+        
+    @pyqtSlot()
+    def usernamePrint(self):
+        self.labelNama.setText(globalVariable.nama)
+        self.labelNama.update()
+        
+            
 
     # func :: load notify
     def initializeNotify(self):
@@ -104,8 +119,7 @@ class Ui_MainWindow(QtWidgets.QWidget):
         
         # Show the target widget.
         self.targetWidget.show()
-
-
+    
     @pyqtSlot(np.ndarray)
     def update_image(self, cv_img):
         """Updates the image_label with a new opencv image"""
@@ -131,21 +145,33 @@ class Ui_MainWindow(QtWidgets.QWidget):
 # Thread Class (videoThread)
 class VideoThread(QThread):
     change_pixmap_signal = pyqtSignal(np.ndarray)
+    labelUsername = pyqtSignal()
     
     i2c = busio.I2C(board.SCL, board.SDA)                   # init board raspberry
     sensorTc = adafruit_amg88xx.AMG88XX(i2c)                # init sensor AMG8833g
     time.sleep(1)
 
     cap = cv2.VideoCapture(appConfig.CAMERA_INDEX)          # set cap as cv2 videocapture
-    #cap.set(cv2.CAP_PROP_FPS,appConfig.CAMERA_FPS)          # set camera fps max limit
-
+    cap.set(cv2.CAP_PROP_FPS, 30)          # set camera fps max limit
+    
     def run(self):
-        
         # check file cascade
         log.info("[CHECK] Cascade Path: "+ util.checkPath(appConfig.FILE_CASCADE))
 
         # cv face detect with default haarcascade
-        faceDetect = cv2.CascadeClassifier(util.checkPath(appConfig.FILE_CASCADE));
+        faceDetect = cv2.CascadeClassifier(util.checkPath(appConfig.FILE_CASCADE))
+        
+        # realtime face coordinate X Y
+        cordinateX = 0
+        cordinateY = 0
+
+        # updated face coordinate X Y after capture face
+        lastCapturedX = 0
+        lastCapturedY = 0
+
+        # send request api attendance delay
+        sendDelay = 15
+
         # camera = True
         # capture from web cam use while for realtime
         while True:
@@ -161,23 +187,31 @@ class VideoThread(QThread):
                 # create rectangle in face
                 for (x,y,w,h) in faces:
                     cv2.rectangle(cv_img,(x,y), (x+w,y+h),(0,255,0),2)
+                    cordinateX = x
+                    cordinateY = y
                 self.thermalDetectValue()
 
             # set variable if detect face
             globalVariable.isDetectFace = True if (len(faces) >= 1) else False
-
+            
             # count detected face
             globalVariable.faceDetectedCount = len(faces)
 
             if ret:
                 self.change_pixmap_signal.emit(cv_img)
 
-            if(globalVariable.faceDetectedCount == 1 and globalVariable.thermalMaxTemp > 25):            
-                # print("sending data to server")
-                self.captureFaceImage(cv_img)
-
-            util.collectLog("Thermal Max Temperature: "+ str(globalVariable.thermalMaxTemp),Logstate.INFO)
-            time.sleep(5)
+            if(globalVariable.faceDetectedCount == 1 and globalVariable.thermalMaxTemp > 25):  
+                if(lastCapturedX != cordinateX and lastCapturedY != cordinateY and sendDelay < 1):
+                    # print("sending data to server")
+                    self.captureFaceImage(cv_img)
+                    lastCapturedX = cordinateX
+                    lastCapturedY = cordinateY
+                    sendDelay = 15
+                    self.labelUsername.emit()
+                else:
+                    sendDelay -=1
+                    util.collectLog("FaceDetect coordinate is same. Skipped!", Logstate.INFO)
+            util.collectLog("Thermal Max Temperature: "+ str(globalVariable.thermalMaxTemp), Logstate.INFO)
             # print("After 5 seconds")
 
     
@@ -191,19 +225,23 @@ class VideoThread(QThread):
                 # save higher value thermal temp
                 if(pixels[x][y] > globalVariable.thermalMaxTemp):
                     globalVariable.thermalMaxTemp = pixels[x][y]
+        globalVariable.thermalMaxTemp -=3
 
     # func :: capture face & export to as image
     def captureFaceImage(self,img):
         cv2.imwrite(util.checkPath(appConfig.TAKE_PICTURE_FILENAME), img)
         log.info('[TAKEPICTURE] Image exported: '+ util.checkPath(appConfig.TAKE_PICTURE_FILENAME))
         self.deliveryAttendance()
-        time.sleep(7)
 
     # func :: send image & thermal to endpoint API
     def deliveryAttendance(self):
         if(globalVariable.thermalMaxTemp > 0):
-            delivery.matchImagePerson(globalVariable.thermalMaxTemp, util.checkPath(appConfig.TAKE_PICTURE_FILENAME))
+            res = delivery.matchImagePerson(globalVariable.thermalMaxTemp, util.checkPath(appConfig.TAKE_PICTURE_FILENAME))
             globalVariable.thermalMaxTemp = 0
+            if(res['success']):
+                globalVariable.nama = res['obj']['nama']
+        time.sleep(1)
+            
 
 # Main app first load
 if __name__ == "__main__":
