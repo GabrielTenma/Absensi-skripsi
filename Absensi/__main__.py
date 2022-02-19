@@ -211,6 +211,9 @@ class VideoThread(QThread):
                 else:
                     sendDelay -=1
                     util.collectLog("FaceDetect coordinate is same. Skipped!", Logstate.INFO)
+                    globalVariable.nama = ''
+                    self.labelUsername.emit()
+                    
             util.collectLog("Thermal Max Temperature: "+ str(globalVariable.thermalMaxTemp), Logstate.INFO)
             # print("After 5 seconds")
 

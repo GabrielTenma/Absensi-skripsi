@@ -24,6 +24,8 @@ def matchImagePerson(temperature, image):
         result = res['success'] #return true/false
         if(result):
             nama = res['obj']['nama']
+        else:
+            nama = 'unknown'
         util.collectLog("[POST] matchImagePerson: OK, " + str(result) + str("\nname: " + nama),util.Logstate.INFO)
     except:
         util.collectLog("[POST] matchImagePerson: occured "+ str(sys.exc_info()),util.Logstate.INFO)
